@@ -289,7 +289,6 @@ ReadImage (FILE              *fp,
   unsigned char *alphas;
 
   int width, height, bpp, abpp, pbpp, nalphas;
-  int wh, wh3, whp;
   int j, k;
   int pelbytes, wbytes, bsize, npels, pels;
   int rle, badread;
@@ -447,17 +446,7 @@ ReadImage (FILE              *fp,
   else
 	  pelbytes = 3;
 
-  wh = (unsigned)width * height;
-  if (wh / width != height) {
-   idl_error:
-    FATALP("TGA: image dimensions too large");
-  }
-  wh3 = 3U * wh;
-  if (wh3 / 3 != wh) goto idl_error;
-  whp = (unsigned)pelbytes * wh;
-  if (whp / pelbytes != wh) goto idl_error;
-
-  image.bitmap = (unsigned char *) malloc (wh3);
+  image.bitmap = (unsigned char *) malloc (width * height * 3 * sizeof(unsigned char));
   BITMAP_WIDTH (image) = (unsigned short) width;
   BITMAP_HEIGHT (image) = (unsigned short) height;
   BITMAP_PLANES (image) = (unsigned short) 3;
@@ -468,7 +457,7 @@ ReadImage (FILE              *fp,
   /* Maybe we need to reverse the data. */
   buffer = NULL;
   if (horzrev || vertrev)
-    buffer = (unsigned char *) malloc (whp);
+    buffer = (unsigned char *) malloc (width * height * pelbytes * sizeof (unsigned char));
   if (rle)
     myfread = rle_fread;
   else
@@ -477,7 +466,7 @@ ReadImage (FILE              *fp,
   wbytes = width * pelbytes;
   badread = 0;
 
-  npels = wh;
+  npels = width * height;
   bsize = wbytes * height;
 
   /* Suck in the data one height at a time. */
@@ -579,7 +568,7 @@ ReadImage (FILE              *fp,
       int xpos, ypos;
 
       temp2 = temp = image.bitmap;
-      image.bitmap = temp3 = (unsigned char *) malloc (wh3);
+      image.bitmap = temp3 = (unsigned char *) malloc (width * height * 3 * sizeof (unsigned char));
 
       for (ypos = 0; ypos < height; ypos++)
         {
